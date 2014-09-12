@@ -29,7 +29,6 @@ struct node
 
 ```c++
 FibonacciHeap F;
-F.Make_Heap();
 ```
 ####Extract Min O(log(n))
 ```c++
