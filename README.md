@@ -44,3 +44,7 @@ Weight is decreased by change.
 ```c++
 F.Decrease_Key(int vertex, int change); 
 ```
+####Display Heap (Only use on small heaps)
+```c++
+F.Display_Heap();
+```
