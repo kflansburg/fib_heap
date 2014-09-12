@@ -44,8 +44,3 @@ Weight is decreased by change.
 ```c++
 F.Decrease_Key(int vertex, int change); 
 ```
-####Merge O(1)
-Merges heap in argument into main heap. 
-```c++
-F.Union(node* h);
-```
