@@ -11,13 +11,13 @@ This was primarily implemented for use in [Prim's Algorithm](http://en.wikipedia
 ```c++
 struct node
 {
-    int rank; //Rank of Node
-    char mark; //Is node Marked? "0"==No, "1"==Yes
+    int rank;
+    char mark;
     
-    int vertex; //Vertex that node represents
-    int weight; //Weight of edge attatched to node
+    int vertex;
+    int weight;
     
-    node* parent; //Pointers relative to node
+    node* parent;
     node* child;
     node* left;
     node* right;
