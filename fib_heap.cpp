@@ -1,81 +1,165 @@
-#include <cmath>
 #include <iostream>
-#include "fib_heap.hpp"
+#include <cmath>
+#include <cstdlib>
 using namespace std;
+
+bool DEBUG=1;
+
+struct node
+{
+    int rank; //Rank of Node
+    char mark; //Is node Marked? "0"==No, "1"==Yes
+    int vertex; //Vertex that node represents
+    int weight; //Weight of least edge attatched to node
+    node* parent; //Pointers relative to node
+    node* child;
+    node* left;
+    node* right;
+};
+
+
+class FibonacciHeap{
+private:
+    int size; //Total size of heap
+    node* H; //root node
+public:
+    node* Make_Heap();
+    void Insert(int, int);
+    node* New_Heap_With_Node(int,int);
+    void Meld(node*);
+    void Display_Heap(void);
+    void Display_Node(node* p);
+    void Delete_Min(void);
+    node* Extract_Min(void);
+    node* Link(node*, node*);
+    void Consolidate(void);
+    void Decrease_Key(int,int);
+    FibonacciHeap()
+    {
+        H = Make_Heap();
+        size = 0;
+    }
+};
 
 //Fibbonaci Heap
 node* FibonacciHeap::Make_Heap()
 {
-        
-    node* np;
-    np = NULL;
+    node* np = NULL;
     return np;
 }//Create empty heap
 
 void FibonacciHeap::Insert(int weight_, int vertex_)
-{
-        
-    //Create empty heap, with one node
-    node *newNode = New_Heap_With_Node(weight_, vertex_);
-    
+{   
+    //Create empty heap, with one node 
     //Union new heap and root heap
-    H = Meld(H, newNode);
+    //cout<<"Inserting:"<<endl;
+    node *p = New_Heap_With_Node(weight_,vertex_);
+    Meld(p);
+    //Display_Node(p);
 }//Inserts node with argument values into existing heap
+
 
 node* FibonacciHeap::New_Heap_With_Node(int weight_,int vertex_)
 {
-
     //Create new node struct and populate with data/defualt values
-    node* newNode = new node;
-    newNode->weight = weight_;
-    newNode->rank = 0;
-    newNode->parent = NULL;
-    newNode->child = NULL;
-    newNode->left = newNode;
-    newNode->right = newNode;
-    newNode->mark = '0';
-    newNode->vertex = vertex_;
-    return newNode;
+    node* p = new node;
+
+    p->weight = weight_;
+    p->vertex = vertex_;
+    p->rank = 0;
+    p->mark = '0';
+
+    p->parent = NULL;
+    p->child = NULL;
+    p->left = p;
+    p->right = p;
+    return p;
 }//Technically creates new heap with one node, but since that is represented by a pointer to root node, this is the same thing
 
-node* FibonacciHeap::Meld(node* N1,node* N2)
+
+void FibonacciHeap::Display_Node(node* p){
+    cout<<"Node"<<endl;
+    cout<<"    Vertex: "<<p->vertex<<endl;
+    cout<<"    Weight: "<<p->weight<<endl;
+    cout<<"    Rank: "<<p->rank<<endl;
+    cout<<"    Marked: "<<p->mark<<endl;
+    cout<<"    Left: "<<p->left->vertex<<endl;
+    cout<<"    Right: "<<p->right->vertex<<endl;
+    if(p->parent!=NULL)
+        cout<<"    Parent: "<<p->parent->vertex<<endl;
+    if(p->child!=NULL)
+        cout<<"    Child: "<<p->child->vertex<<endl;
+    
+    
+}
+
+
+void FibonacciHeap::Meld(node* p)
 {
     
-    //Merge root linked lists
-    node*p = N1->left;
-    (N2->right)->left = N1;
-    N1->left = N2->right;
-    N2->right = p;
-    p->left = N2;
-    
-    //Return lowest weight as new root
-    if(N1->weight<N2->weight){
-        return N1;
+    node*np=NULL;
+    if(H==np){
+        //No current elements, simply return node
+        //cout<<"    Empty Heap"<<endl;
+        H=p;
     }
     else{
-        return N2;
+        
+        //Merge root linked lists
+        node* x = p->right;
+        p->right=H->right;
+        (H->right)->left=p;
+        H->right = x;
+        x->left = H;
+
+        //Return lowest weight as new root
+        //cout<<p->weight<<"<"<<H->weight<<"?"<<endl;
+        if(p->weight<H->weight){
+            H=p;
+        }
     }
+
     size++; //Only works for insertion
 }//Merge root nodes, return lowest weight node
+
+void FibonacciHeap::Display_Heap()
+{
+    if(H==NULL){
+        cout<<"No nodes in heap!"<<endl;
+    }
+    else{
+        cout<<size<<endl;
+        cout<<"Root Rank: "<<H->rank<<endl;
+        node* p=H;
+        do{
+            cout<<p->vertex<<"("<<p->weight<<")->";
+            p=p->left;
+        }
+        while(p!=H);
+        cout<<endl;
+    }
+    
+    
+}
 
 node* FibonacciHeap::Extract_Min()
 {
     node* p=H;
+    if(DEBUG){cout<<"Extracting: "<<p->vertex<<endl;}
     Delete_Min();
     return p;
 }
 
 void FibonacciHeap::Delete_Min()
 {
-    
-    
     //If empty heap, dont do anything
     if (H != NULL){
         //While there are children, remove them from children and place in root
-        do {
+        while (H->child!=NULL){
+            if(DEBUG){cout<<"Child Found, Adding to Root."<<endl;}
             //Get current child
             node* c = H->child;
-            
+
             //Case: last child
             if(c->left==c){
                 //Eliminate Child List
@@ -85,23 +169,23 @@ void FibonacciHeap::Delete_Min()
             else{
                 //Assign new child to H
                 H->child = c->left; //Doesnt matter which one, we will remove them all
-                
+
                 //Merge linked list
                 (c->left)->right=c->right;
                 (c->right)->left=c->left;
             }
-            
+
             //Place c in root list, for now doesnt matter if sorted, will be consolidated
             (H->right)->left=c;
             c->right=(H->right);
             c->left = H;
             H->right = c;
             c->parent=NULL;
-            
+
         }
-        while (H->child!=NULL);
-    
-    
+        
+
+
         //Check that there are other root nodes
         if(H->left==H){
             //There where no other root nodes, and no children to add to the root
@@ -109,19 +193,22 @@ void FibonacciHeap::Delete_Min()
             size--;
         }
         else{
+            if(DEBUG){cout<<"Consolidating"<<endl;}
+            
             //There are roots to consolidate
             (H->right)->left=H->left;
             (H->left)->right=H->right;
-            
+
             //No longer need H, pass another root to consolidate, which will return new root
             H=(H->left);
             size--;
-            
             Consolidate();
         }
-        
+
     }
 }//Removes root node, links children with root nodes and consolidates FHeap
+
+
 
 node* FibonacciHeap::Link(node* h1, node* h2)
 {
@@ -129,6 +216,7 @@ node* FibonacciHeap::Link(node* h1, node* h2)
     //Links two roots
     node*root;
     node*child;
+    if(DEBUG){cout<<h1->weight<<"<"<<h2->weight<<"?"<<endl;}
     if(h1->weight<h2->weight){
         root = h1;
         child = h2;
@@ -141,55 +229,65 @@ node* FibonacciHeap::Link(node* h1, node* h2)
 
     //Set child's new parent
     child->parent=root;
+    
     //remove child from root list
     (child->right)->left=child->left;
     (child->left)->right=child->right;
-    
+
     //insert child into children
-    child->left = root->child;
-    child->right = (root->child)->right;
-    (child->left)->right = child;
-    (child->right)->left=child;
-    
-    //If new child is less, update
-    if(child->weight<(root->child)->weight){
-        root->child = child;
+    if(root->child!=NULL){
+        child->left = root->child;
+        child->right = (root->child)->right;
+        (child->left)->right = child;
+        (child->right)->left=child;
+        //If new child is less, update
+        if(child->weight<(root->child)->weight){
+            root->child = child;
+        }
     }
-    
+    else{
+        root->child=child;
+        child->left=child;
+        child->right=child;
+    }
+
     //Increase degree of new root
     (root->rank)++;
     return root;
-} 
+}
 
 void FibonacciHeap::Consolidate()
 {
     int max_depth = ceil(log2(size)); //Figure out the maximum depth possible
-    
+
     node *ranks[max_depth]; //Use array to keep track of conflicting degrees
-    
+
     //Array for checking depth
-    node*np=NULL;
     for(int i=0;i<max_depth;i++){
-        ranks[i]=np;
+        ranks[i]=NULL;
     }
-    
-    node*p = H->left;
+
+    node*p = H;
     //For each root node, check if conflicting degree
-    do{
+    do
+    {
         int r = p->rank;
-        
-        do{
+        if(DEBUG){cout<<"Vertex: "<<p->vertex<<" Rank: "<<p->rank<<endl;}
+        while(ranks[r]!=NULL)
+        {
             //If conflict, link conflicting trees, and try to store new tree.
+            if(DEBUG){cout<<"    Conflict: "<<ranks[r]->vertex<<","<<p->vertex<<endl;}
             p=Link(p,ranks[r]);
-            ranks[r]=np;
+            ranks[r]=NULL;
             r=p->rank;
         }
-        while(ranks[r]!=NULL);
+        
         ranks[r]=p;
         p=p->left;
     }
     while(p!=H);
     
+
     //Search for new minimum root
     p=H->left;
     node* root=H;
@@ -200,7 +298,7 @@ void FibonacciHeap::Consolidate()
         p=p->left;
     }
     while(p!=H);
-    
+
     H=root;
 }
 
@@ -208,7 +306,21 @@ void FibonacciHeap::Decrease_Key(int vertex_,int del_){
         //Decreases the node associated with vertex_'s key by del_, and places node as root node
 }
 
+
+
+
 int main(){
-	cout<<"Cool Beans"<<endl;
+	FibonacciHeap F; //Create new Heap
+    for(int i = 1;i<=10;i++){
+        int weight = rand()%100;
+        F.Insert(weight,i);
+    }
+    F.Display_Heap();
+    cout<<"Extracting: "<<F.Extract_Min()->vertex<<endl;
+    
+    F.Display_Heap();
 	return 0;
 }
+
+
+
