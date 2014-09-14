@@ -3,7 +3,7 @@
 #include <cstdlib>
 using namespace std;
 
-bool DEBUG=1;
+bool DEBUG=0;
 
 struct node
 {
@@ -277,7 +277,13 @@ void FibonacciHeap::Consolidate()
         {
             //If conflict, link conflicting trees, and try to store new tree.
             if(DEBUG){cout<<"    Conflict: "<<ranks[r]->vertex<<","<<p->vertex<<endl;}
-            p=Link(p,ranks[r]);
+            if(p==H||ranks[r]==H){
+                p=Link(p,ranks[r]);
+                H=p;
+            }
+            else{
+                p=Link(p,ranks[r]);
+            }
             ranks[r]=NULL;
             r=p->rank;
         }
@@ -289,7 +295,7 @@ void FibonacciHeap::Consolidate()
     
 
     //Search for new minimum root
-    p=H->left;
+    p=H;
     node* root=H;
     do{
         if(p->weight<root->weight){
@@ -303,20 +309,27 @@ void FibonacciHeap::Consolidate()
 }
 
 void FibonacciHeap::Decrease_Key(int vertex_,int del_){
-        //Decreases the node associated with vertex_'s key by del_, and places node as root node
-}
+    //Cut node and move to root
+    //Cut stuff
+}//Decreases the node associated with vertex_'s key by del_, and places node as root node
 
 
 
 
 int main(){
 	FibonacciHeap F; //Create new Heap
-    for(int i = 1;i<=10;i++){
+
+    
+    srand (time(NULL));
+    int max;
+    cin>>max;
+    for(int i = 1;i<=max;i++){
         int weight = rand()%100;
         F.Insert(weight,i);
     }
     F.Display_Heap();
-    cout<<"Extracting: "<<F.Extract_Min()->vertex<<endl;
+    F.Consolidate();
+    //cout<<"Extracting: "<<F.Extract_Min()->vertex<<endl;
     
     F.Display_Heap();
 	return 0;
