@@ -46,7 +46,7 @@ F.Decrease_Key(int vertex, int change);
 ####Display Heap (Only use on small heaps)
 Publishes tree to fibtree.json, open fib.html to view this in D3.
 
-![Sample Graph](http://imgur.com/alQvSbs)
+![Sample Graph](http://i.imgur.com/alQvSbs)
 
 ```c++
 F.Display_Heap();
