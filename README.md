@@ -3,7 +3,7 @@ fib_heap
 
 Fibonacci Heap Implementation for C++
 
-Primarily References [Fibonacci Heaps and Their Uses in Improved Network Optimization Algorithms](http://www.cl.cam.ac.uk/~sos22/supervise/dsaa/fib_heaps.pdf)
+References: [Fibonacci Heaps and Their Uses in Improved Network Optimization Algorithms - Fredman, et al.](http://www.cl.cam.ac.uk/~sos22/supervise/dsaa/fib_heaps.pdf)
 
 #Notes
 This was primarily implemented for use in [Prim's Algorithm](http://en.wikipedia.org/wiki/Prim's_algorithm). Graph vertecies are stored in the heap, and ordered by an edge weight associated with each vertex. As such, each node in this implementation takes a vertex integer and weight integer and the heap uses the weight property for organization. 
@@ -25,6 +25,7 @@ struct node
 ```
 
 #Heap Operations
+This section will detail how to implement common heap operations using this library, and lists the amortized running time for each as described in Fredman, et al.
 ####Creating a Heap
 
 ```c++
