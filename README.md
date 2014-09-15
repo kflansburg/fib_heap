@@ -44,7 +44,7 @@ Weight is decreased by change.
 F.Decrease_Key(int vertex, int change); 
 ```
 ####Display Heap (Only use on small heaps)
-Publishes tree to fibtree.json, open fib.html to view this in D3.
+Publishes tree to fib.json, open fib.html to view this in D3.
 
 ![Sample Graph](Tree.png)
 
