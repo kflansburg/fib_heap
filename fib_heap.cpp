@@ -1,6 +1,10 @@
 #include <iostream>
 #include <cmath>
 #include <cstdlib>
+#include <fstream>
+
+
+#define filename "fib.json"
 using namespace std;
 
 bool DEBUG=0;
@@ -33,7 +37,8 @@ public:
     node* Extract_Min(void);
     node* Link(node*, node*);
     void Consolidate(void);
-    void Decrease_Key(int,int);
+    void Decrease_Key(node*,int);
+    void EnumerateChildren(std::ofstream&,node*);
     FibonacciHeap()
     {
         H = Make_Heap();
@@ -128,19 +133,52 @@ void FibonacciHeap::Display_Heap()
         cout<<"No nodes in heap!"<<endl;
     }
     else{
-        cout<<size<<endl;
-        cout<<"Root Rank: "<<H->rank<<endl;
-        node* p=H;
+        ofstream jsonfile;
+        jsonfile.open(filename);
+        node*p=H;
+        jsonfile<<"{\"name\":\"min="<<H->vertex<<"\",\"children\":[";
         do{
-            cout<<p->vertex<<"("<<p->weight<<")->";
+            jsonfile<<"{\"name\":\""<<p->vertex<<"("<<p->weight<<")\",\"weight\":\""<<p->weight<<"\",\"children\":[";
+            
+            EnumerateChildren(jsonfile,p);
+            
+            jsonfile<<"]}";
+            if(p->left!=H){
+                jsonfile<<",";
+            }
             p=p->left;
         }
         while(p!=H);
-        cout<<endl;
-    }
-    
-    
+
+        jsonfile<<"]}";
+        jsonfile.close();
+
+
+        
+    }  
 }
+
+void FibonacciHeap::EnumerateChildren(std::ofstream& file,node*h){
+
+    if(h->child){
+        node*p=h->child;
+
+        do{
+            file<<"{\"name\":\""<<p->vertex<<"("<<p->weight<<")\",\"weight\":\""<<p->weight<<"\",\"children\":[";
+                EnumerateChildren(file,p);
+            file<<"]}";
+            if(p->left!=h->child){
+                file<<",";
+            }
+            p=p->left;
+        }
+        while(p!=h->child);
+
+    }
+
+
+}
+
 
 node* FibonacciHeap::Extract_Min()
 {
@@ -308,10 +346,28 @@ void FibonacciHeap::Consolidate()
     H=root;
 }
 
-void FibonacciHeap::Decrease_Key(int vertex_,int del_){
-    //Cut node and move to root
-    //Cut stuff
+void FibonacciHeap::Decrease_Key(node *h,int del_){
+    //Decrease Key
+    h->weight-=del_;
+
+    //Check if new key violates heap
+    if(h->weight<(h->parent)->weight){
+        
+
+        //Cut and place in root
+
+        //Check parent for marked (recursive)
+            //YES
+                //Cut and place in root, unmark
+                //Check Parent
+            //NO
+                //Mark
+    }
 }//Decreases the node associated with vertex_'s key by del_, and places node as root node
+
+//Cut Function
+
+//Check Parent Function
 
 
 
@@ -327,7 +383,7 @@ int main(){
         int weight = rand()%100;
         F.Insert(weight,i);
     }
-    F.Display_Heap();
+    
     F.Consolidate();
     //cout<<"Extracting: "<<F.Extract_Min()->vertex<<endl;
     
