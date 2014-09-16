@@ -26,6 +26,7 @@ class FibonacciHeap{
 private:
     int size; //Total size of heap
     node* H; //root node
+    int roots; //Keep track of number of roots
 public:
     node* Make_Heap();
     void Insert(int, int);
@@ -39,10 +40,12 @@ public:
     void Consolidate(void);
     void Decrease_Key(node*,int);
     void EnumerateChildren(std::ofstream&,node*);
+    void Display_Root(void);
     FibonacciHeap()
     {
         H = Make_Heap();
         size = 0;
+        roots=0;
     }
 };
 
@@ -81,6 +84,14 @@ node* FibonacciHeap::New_Heap_With_Node(int weight_,int vertex_)
     return p;
 }//Technically creates new heap with one node, but since that is represented by a pointer to root node, this is the same thing
 
+void FibonacciHeap::Display_Root(){
+    node*p=H;
+    do{
+        Display_Node(p);
+        p=p->left;
+    }
+    while(p!=H);
+}
 
 void FibonacciHeap::Display_Node(node* p){
     cout<<"Node"<<endl;
@@ -125,6 +136,7 @@ void FibonacciHeap::Meld(node* p)
     }
 
     size++; //Only works for insertion
+    roots++;
 }//Merge root nodes, return lowest weight node
 
 void FibonacciHeap::Display_Heap()
@@ -138,11 +150,13 @@ void FibonacciHeap::Display_Heap()
         node*p=H;
         jsonfile<<"{\"name\":\"min="<<H->vertex<<"\",\"children\":[";
         do{
-            jsonfile<<"{\"name\":\""<<p->vertex<<"("<<p->weight<<")\",\"weight\":\""<<p->weight<<"\",\"children\":[";
+            jsonfile<<"\n{\"name\":\""<<p->vertex<<"("<<p->weight<<")\",\"weight\":\""<<p->weight<<"\",\"children\":[";
             
+            Display_Node(p);
             EnumerateChildren(jsonfile,p);
             
             jsonfile<<"]}";
+
             if(p->left!=H){
                 jsonfile<<",";
             }
@@ -164,12 +178,14 @@ void FibonacciHeap::EnumerateChildren(std::ofstream& file,node*h){
         node*p=h->child;
 
         do{
-            file<<"{\"name\":\""<<p->vertex<<"("<<p->weight<<")\",\"weight\":\""<<p->weight<<"\",\"children\":[";
+            file<<"\n{\"name\":\""<<p->vertex<<"("<<p->weight<<")\",\"weight\":\""<<p->weight<<"\",\"children\":[";
+                Display_Node(p);
                 EnumerateChildren(file,p);
             file<<"]}";
             if(p->left!=h->child){
                 file<<",";
             }
+
             p=p->left;
         }
         while(p!=h->child);
@@ -219,6 +235,8 @@ void FibonacciHeap::Delete_Min()
             c->left = H;
             H->right = c;
             c->parent=NULL;
+            (H->rank)--;
+            roots++;
 
         }
         
@@ -229,6 +247,7 @@ void FibonacciHeap::Delete_Min()
             //There where no other root nodes, and no children to add to the root
             H = NULL;
             size--;
+            roots--;
         }
         else{
             if(DEBUG){cout<<"Consolidating"<<endl;}
@@ -240,6 +259,7 @@ void FibonacciHeap::Delete_Min()
             //No longer need H, pass another root to consolidate, which will return new root
             H=(H->left);
             size--;
+            roots--;
             Consolidate();
         }
 
@@ -291,13 +311,15 @@ node* FibonacciHeap::Link(node* h1, node* h2)
 
     //Increase degree of new root
     (root->rank)++;
+    roots--;
     return root;
 }
 
 void FibonacciHeap::Consolidate()
 {
-    int max_depth = ceil(log2(size)); //Figure out the maximum depth possible
-
+    int max_depth = ceil(log2(size)/log2(1.618)); //Figure out the maximum depth possible
+    if(DEBUG){cout<<"Max Depth: "<<max_depth<<endl;}
+    if(DEBUG){cout<<"Roots: "<<roots<<endl;}
     node *ranks[max_depth]; //Use array to keep track of conflicting degrees
 
     //Array for checking depth
@@ -305,43 +327,46 @@ void FibonacciHeap::Consolidate()
         ranks[i]=NULL;
     }
 
+    //Build list of roots to check
     node*p = H;
+    node* rootlist[roots];
+    for(int i = 0;i<roots;i++){
+        rootlist[i]=p;
+        p=p->left;
+    }
+
+
+
+    int old_roots = roots; //Roots is gonna change in the loop
     //For each root node, check if conflicting degree
-    do
-    {
+    for(int i = 0;i<old_roots;i++)
+    {   
+        p=rootlist[i];
         int r = p->rank;
         if(DEBUG){cout<<"Vertex: "<<p->vertex<<" Rank: "<<p->rank<<endl;}
         while(ranks[r]!=NULL)
         {
             //If conflict, link conflicting trees, and try to store new tree.
             if(DEBUG){cout<<"    Conflict: "<<ranks[r]->vertex<<","<<p->vertex<<endl;}
-            if(p==H||ranks[r]==H){
-                p=Link(p,ranks[r]);
-                H=p;
-            }
-            else{
-                p=Link(p,ranks[r]);
-            }
+            p=Link(p,ranks[r]);
             ranks[r]=NULL;
             r=p->rank;
         }
         
         ranks[r]=p;
-        p=p->left;
     }
-    while(p!=H);
     
 
     //Search for new minimum root
-    p=H;
-    node* root=H;
+    
+    node* root=p; //Some root node
     do{
         if(p->weight<root->weight){
             root=p;
         }
         p=p->left;
     }
-    while(p!=H);
+    while(p!=root);
 
     H=root;
 }
@@ -375,19 +400,54 @@ void FibonacciHeap::Decrease_Key(node *h,int del_){
 int main(){
 	FibonacciHeap F; //Create new Heap
 
-    
-    srand (time(NULL));
-    int max;
-    cin>>max;
-    for(int i = 1;i<=max;i++){
-        int weight = rand()%100;
-        F.Insert(weight,i);
+    while(true){
+        cout<<"1. Generate Random Heap [size]."<<endl;
+        cout<<"2. Display Heap."<<endl;
+        cout<<"3. Extract Minimum."<<endl;
+        cout<<"4. Generate Random List and Sort [length]."<<endl;
+        int command;
+        int max;
+        cin>>command;
+        switch(command){
+            case 1:
+                cin>>max;
+                srand (time(NULL));
+                for(int i = 1;i<=max;i++){
+                    int weight = rand()%max;
+                    F.Insert(weight,i);
+                }
+                break;
+            case 2:
+                F.Display_Heap();
+                break;
+            case 3:
+                node* min;
+                min=F.Extract_Min();
+                if(min==NULL){
+                    cout<<"Empty Tree!"<<endl;
+                }
+                else{
+                    cout<<min->vertex<<"("<<min->weight<<")"<<endl;
+                }
+                break;
+            case 4:
+                cin>>max;
+                srand (time(NULL));
+                cout<<"LIST: "<<endl;
+                for(int i = 1;i<=max;i++){
+                    int weight = rand()%max;
+                    F.Insert(weight,i);
+                    cout<<weight<<endl;
+                }
+                cout<<"SORTED LIST: "<<endl;
+                for(int i = 1;i<=max;i++){
+                    cout<<F.Extract_Min()->weight<<endl;
+                }
+                break;
+            default:
+                break;
+        }
     }
-    
-    F.Consolidate();
-    //cout<<"Extracting: "<<F.Extract_Min()->vertex<<endl;
-    
-    F.Display_Heap();
 	return 0;
 }
 
