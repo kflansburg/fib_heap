@@ -2,70 +2,27 @@
 #include <cmath>
 #include <cstdlib>
 #include <fstream>
-
-
-#define filename "fib.json"
+#include "fib_heap.hpp"
 using namespace std;
-
-bool DEBUG=0;
-
-struct node
-{
-    int rank; //Rank of Node
-    char mark; //Is node Marked? "0"==No, "1"==Yes
-    int vertex; //Vertex that node represents
-    int weight; //Weight of least edge attatched to node
-    node* parent; //Pointers relative to node
-    node* child;
-    node* left;
-    node* right;
-};
+#define DEBUG 0
 
 
-class FibonacciHeap{
-private:
-    int size; //Total size of heap
-    node* H; //root node
-    int roots; //Keep track of number of roots
-public:
-    node* Make_Heap();
-    void Insert(int, int);
-    node* New_Heap_With_Node(int,int);
-    void Meld(node*);
-    void Display_Heap(void);
-    void Display_Node(node* p);
-    void Delete_Min(void);
-    node* Extract_Min(void);
-    node* Link(node*, node*);
-    void Consolidate(void);
-    void Decrease_Key(node*,int);
-    void EnumerateChildren(std::ofstream&,node*);
-    void Display_Root(void);
-    FibonacciHeap()
-    {
-        H = Make_Heap();
-        size = 0;
-        roots=0;
-    }
-};
-
-//Fibbonaci Heap
 node* FibonacciHeap::Make_Heap()
 {
     node* np = NULL;
     return np;
 }//Create empty heap
 
-void FibonacciHeap::Insert(int weight_, int vertex_)
+node* FibonacciHeap::Insert(int weight_, int vertex_)
 {   
     //Create empty heap, with one node 
     //Union new heap and root heap
     //cout<<"Inserting:"<<endl;
     node *p = New_Heap_With_Node(weight_,vertex_);
     Meld(p);
+    return p;
     //Display_Node(p);
 }//Inserts node with argument values into existing heap
-
 
 node* FibonacciHeap::New_Heap_With_Node(int weight_,int vertex_)
 {
@@ -84,16 +41,8 @@ node* FibonacciHeap::New_Heap_With_Node(int weight_,int vertex_)
     return p;
 }//Technically creates new heap with one node, but since that is represented by a pointer to root node, this is the same thing
 
-void FibonacciHeap::Display_Root(){
-    node*p=H;
-    do{
-        Display_Node(p);
-        p=p->left;
-    }
-    while(p!=H);
-}
-
-void FibonacciHeap::Display_Node(node* p){
+void FibonacciHeap::Display_Node(node* p)
+{
     cout<<"Node"<<endl;
     cout<<"    Vertex: "<<p->vertex<<endl;
     cout<<"    Weight: "<<p->weight<<endl;
@@ -104,11 +53,8 @@ void FibonacciHeap::Display_Node(node* p){
     if(p->parent!=NULL)
         cout<<"    Parent: "<<p->parent->vertex<<endl;
     if(p->child!=NULL)
-        cout<<"    Child: "<<p->child->vertex<<endl;
-    
-    
-}
-
+        cout<<"    Child: "<<p->child->vertex<<endl;   
+}//Displays a particular node, used mostly for debugging
 
 void FibonacciHeap::Meld(node* p)
 {
@@ -146,13 +92,13 @@ void FibonacciHeap::Display_Heap()
     }
     else{
         ofstream jsonfile;
-        jsonfile.open(filename);
+        jsonfile.open("fib.json");
         node*p=H;
         jsonfile<<"{\"name\":\"min="<<H->vertex<<"\",\"children\":[";
         do{
             jsonfile<<"\n{\"name\":\""<<p->vertex<<"("<<p->weight<<")\",\"weight\":\""<<p->weight<<"\",\"children\":[";
             
-            Display_Node(p);
+            //if(DEBUG){Display_Node(p);}
             EnumerateChildren(jsonfile,p);
             
             jsonfile<<"]}";
@@ -170,16 +116,17 @@ void FibonacciHeap::Display_Heap()
 
         
     }  
-}
+}//Outputs entire heap to fib.json for view in D3 using fib.html
 
-void FibonacciHeap::EnumerateChildren(std::ofstream& file,node*h){
+void FibonacciHeap::EnumerateChildren(std::ofstream& file,node*h)
+{
 
     if(h->child){
         node*p=h->child;
 
         do{
             file<<"\n{\"name\":\""<<p->vertex<<"("<<p->weight<<")\",\"weight\":\""<<p->weight<<"\",\"children\":[";
-                Display_Node(p);
+                //if(DEBUG){Display_Node(p);}
                 EnumerateChildren(file,p);
             file<<"]}";
             if(p->left!=h->child){
@@ -191,10 +138,7 @@ void FibonacciHeap::EnumerateChildren(std::ofstream& file,node*h){
         while(p!=h->child);
 
     }
-
-
-}
-
+}//Used by Display_Heap to recursively explore the tree
 
 node* FibonacciHeap::Extract_Min()
 {
@@ -202,7 +146,7 @@ node* FibonacciHeap::Extract_Min()
     if(DEBUG){cout<<"Extracting: "<<p->vertex<<endl;}
     Delete_Min();
     return p;
-}
+}//Fetches root node, deletes it from heap, and returns it
 
 void FibonacciHeap::Delete_Min()
 {
@@ -257,16 +201,16 @@ void FibonacciHeap::Delete_Min()
             (H->left)->right=H->right;
 
             //No longer need H, pass another root to consolidate, which will return new root
+            node*d=H;
             H=(H->left);
+            delete d;
             size--;
             roots--;
             Consolidate();
         }
 
     }
-}//Removes root node, links children with root nodes and consolidates FHeap
-
-
+}//Removes root node, links children with root nodes and consolidates heap
 
 node* FibonacciHeap::Link(node* h1, node* h2)
 {
@@ -313,7 +257,7 @@ node* FibonacciHeap::Link(node* h1, node* h2)
     (root->rank)++;
     roots--;
     return root;
-}
+}//Compares two root nodes, and makes the larger weighted one a child of the other
 
 void FibonacciHeap::Consolidate()
 {
@@ -369,87 +313,92 @@ void FibonacciHeap::Consolidate()
     while(p!=root);
 
     H=root;
-}
+}//Consolidates the entire heap
 
-void FibonacciHeap::Decrease_Key(node *h,int del_){
+void FibonacciHeap::Decrease_Key(node *h,int new_weight)
+{
     //Decrease Key
-    h->weight-=del_;
+    h->weight=new_weight;
 
     //Check if new key violates heap
-    if(h->weight<(h->parent)->weight){
-        
-
-        //Cut and place in root
-
-        //Check parent for marked (recursive)
-            //YES
-                //Cut and place in root, unmark
-                //Check Parent
-            //NO
-                //Mark
-    }
-}//Decreases the node associated with vertex_'s key by del_, and places node as root node
-
-//Cut Function
-
-//Check Parent Function
-
-
-
-
-int main(){
-	FibonacciHeap F; //Create new Heap
-
-    while(true){
-        cout<<"1. Generate Random Heap [size]."<<endl;
-        cout<<"2. Display Heap."<<endl;
-        cout<<"3. Extract Minimum."<<endl;
-        cout<<"4. Generate Random List and Sort [length]."<<endl;
-        int command;
-        int max;
-        cin>>command;
-        switch(command){
-            case 1:
-                cin>>max;
-                srand (time(NULL));
-                for(int i = 1;i<=max;i++){
-                    int weight = rand()%max;
-                    F.Insert(weight,i);
-                }
-                break;
-            case 2:
-                F.Display_Heap();
-                break;
-            case 3:
-                node* min;
-                min=F.Extract_Min();
-                if(min==NULL){
-                    cout<<"Empty Tree!"<<endl;
-                }
-                else{
-                    cout<<min->vertex<<"("<<min->weight<<")"<<endl;
-                }
-                break;
-            case 4:
-                cin>>max;
-                srand (time(NULL));
-                cout<<"LIST: "<<endl;
-                for(int i = 1;i<=max;i++){
-                    int weight = rand()%max;
-                    F.Insert(weight,i);
-                    cout<<weight<<endl;
-                }
-                cout<<"SORTED LIST: "<<endl;
-                for(int i = 1;i<=max;i++){
-                    cout<<F.Extract_Min()->weight<<endl;
-                }
-                break;
-            default:
-                break;
+    if(h->parent!=NULL){
+        if(h->weight<(h->parent)->weight){
+            if(DEBUG){cout<<"Violates Heap, Cutting: "<<endl;}
+            Cut(h);
         }
     }
-	return 0;
-}
+    else{
+        //Still have to check if new root
+        if(h->weight<H->weight){
+            H=h;
+        }
+    }
+
+}//Sets the node associated with vertex_'s key to new_weight, and places node as root node
+
+void FibonacciHeap::Cut(node*h)
+{
+    //Check that it isnt already in root list
+    if(DEBUG){cout<<"        Cutting: "<<h->vertex<<endl;}
+    if(h->parent!=NULL){
+        if(DEBUG){cout<<"        Not Root, Parent: "<<h->parent->vertex<<endl;}
+        //Remove from child list
+        node*parent = h->parent;
+        if(h->left==h){
+            //Last child
+            if(DEBUG){cout<<"        Last Child."<<endl;}
+            parent->child = NULL;
+
+        }
+        else{
+
+            (h->left)->right=h->right;
+            (h->right)->left=h->left;
+            if(parent->child==h){
+                if(DEBUG){cout<<"        Was Min Child"<<endl;}
+                //Update child pointer with lowest child
+                node*new_root=h->left;
+                node*c=(h->left)->left;
+                while(c!=h->left){
+                    if(c->weight<new_root->weight){
+                        new_root=c;
+                    }
+                    c=c->left;
+                }
+                parent->child=new_root;
+                if(DEBUG){cout<<"        New Child: "<<parent->child->vertex<<endl;}
+            }
+        }
+        (parent->rank)--;
+
+        //Insert into root list
+        (H->left)->right=h;
+        h->left = H->left;
+        h->right=H;
+        H->left=h;
+        if(h->weight<H->weight){
+            if(DEBUG){cout<<"        New Root"<<endl;}
+            H=h;
+        }
+        h->parent=NULL;
+        h->mark='0';
+
+        if(parent->mark=='1'){
+            if(DEBUG){cout<<"        Cutting Parent"<<endl;}
+            Cut(parent);
+        }
+        else{
+            if(DEBUG){cout<<"        Marking Parent"<<endl;}
+            parent->mark='1';
+        }
+        if(DEBUG){cout<<"    Done."<<endl;}
+    }
+    else{
+        if(DEBUG){cout<<"        ROOT."<<endl;}
+    }
+
+}//Cut cuts node and places in root
+
 
 
 
