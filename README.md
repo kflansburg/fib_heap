@@ -36,15 +36,16 @@ FibonacciHeap F;
 node* h = F.Extract_Min();
 ```
 ####Insert O(1)
+Returns a pointer to that node so that you can directly reference it later for Decrease_Key() operations.
 ```c++
-F.Insert(int weight,int vertex);
+node* h = F.Insert(int weight,int vertex);
 ```
 ####Decrease Key O(1)
-Weight is decreased by change. 
+Weight is set to new value for given node, and heap is reshuffled if the new weight violates the heap. 
 ```c++
-F.Decrease_Key(int vertex, int change); 
+F.Decrease_Key(node* h, int weight); 
 ```
-####Display Heap (Only use on small heaps)
+####Display Heap (Only use on small heaps, ~100 nodes)
 Publishes tree to fib.json, open fib.html to view this in D3.
 
 ![Sample Graph](Tree.png)
